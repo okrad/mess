@@ -1,0 +1,104 @@
+/*
+$mainColor: #555;
+
+
+$repoUrl: 'pone/';
+$bgImg: 'background';
+$blur: 1px;
+$f: 2;
+$stdShadow: 2px 3px $blur rgba(4 + $f, 5, 6, 7.2);
+$ns: '.teranet-ns';
+$c: 3;
+
+ .ciccio.pippo {
+	margin: 8px (9px + $blur) * $f ;
+}
+
+$ns .ciccio .pippo, $ns #pluto {
+	margin: 8px 9px * $f + $blur;
+	color: #333 + $mainColor;
+	background: url('{$repoUrl}{$bgImg}/bg.png');
+	font-weight: bold;
+	box-shadow: 1px 2px 5px $mainColor;
+}
+
+$c: $c + 1;
+//
+// $d: $c + 1;
+
+$ns .pasticcio.zuzzu {
+	font-style: bold;
+	border: 1px solid #ccc + 10%;
+	border-radius: 5px 5px 0 $c + 10%;
+	box-shadow: $stdShadow;
+}
+
+$c: 1px;
+$d: $c;
+$c: $d + 1;
+
+  		.ciccio > .pippo {
+	margin: $c;
+}
+
+#id1 + #id2 {
+	padding: 1px;
+}
+*/
+/*
+$ns: '.trn';
+$repoUrl: 'pone/';
+$bgImg: 'background';
+$blur: 1px;
+$borderWidth: 1px;
+
+$ns {
+
+	color: #00f;
+
+	.a1.aaa, .b1 {
+
+		$c: 'scoped_var';
+
+		// background: #fff;
+
+		.a2 {
+
+			$d: 'zzz';
+
+			.a3 {
+
+				$borderWidth: 2px;
+
+				.a4 {
+
+					color: #ccc + 10%;
+					border: $borderWidth solid #f00;
+				}
+			}
+
+		}
+
+		.b2 {
+			border: $borderWidth dashed #0f0;
+			// color: $d;
+		}
+	}
+}
+*/
+
+$col: #eee;
+
+a {
+
+	font-size: 11px;
+
+	b {
+		$col: #ccc;
+		color: $col;
+	}
+
+	c {
+		color: $col + 30%;
+	}
+}

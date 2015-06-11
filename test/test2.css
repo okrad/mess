@@ -1,0 +1,78 @@
+div.btnbar {
+
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    z-index: 3;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    right: 0;
+    border-top: 1px solid #e5e5e5;
+    background: #e5e5e5;
+    background: rgba(229, 229, 229, 0.9);
+    overflow: visible;
+
+
+	.buttons {
+		margin: 0 0 0 10px;
+		line-height: 2.5em;
+	}
+
+	a, a:link, a:visited, a:hover,
+	button, button.disabled, .menubutton {
+		background: #B5B5B5;
+		padding: 5px 10px;
+		font-weight: normal;
+		margin: 0 2px;
+		font-size: 11px;
+		border-radius: 3px;
+		border: none;
+	}
+
+	a:hover {
+		text-decoration: none;
+	}
+
+	.teranet-menu.menubutton {
+
+		a, a:link, a:visited, a:hover, button {
+			background-color: transparent;
+			color: #333;
+			padding-left: 20px;
+		}
+
+		.menu-item:hover {
+			color: #fff;
+		}
+
+		$ > .menu-item {
+				padding: 0;
+				border-right: none;
+				color: #fff;
+		}
+	}
+
+	a.pdf, a.anonPdf, button.simulate, button.simulateExcel, button.simulateLog {
+		background-image: url(pone/img/_system/docicons/pdf.png);
+		background-position: left center;
+		background-repeat:   no-repeat;
+	}
+
+	a.anonPdf {
+		background-image: url(pone/img/_system/docicons/pdf_disabled.png);
+	}
+
+	button.simulate {
+		background-image: url(pone/img/_system/general/money.png);
+	}
+
+	button.simulateExcel {
+		background-image: url(pone/img/_system/docicons/excel.png);
+	}
+
+	button.simulateLog {
+		background-image: url(pone/img/_system/docicons/view.png);
+	}
+
+}
