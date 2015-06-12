@@ -31,6 +31,7 @@ w [ \t\r\n\f]*
 {ident}"("                              return 'FUNCTION';
 {ident}{s}":"{s}						return 'PROPNAME';
 {ident}                                 return 'IDENT';
+{w}"&"{w}								return 'AMPERSAND';
 "$"{ident}{s}":"						return 'ASSIGNMENT';
 "$"{ident}                              return 'DOLLARKEYWORD';
 "@"{ident}                              return 'ATKEYWORD';

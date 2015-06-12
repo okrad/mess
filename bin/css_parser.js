@@ -2,9 +2,6 @@ var util = require('util');
 var parser = require("./mess").parser;
 
 var ast = [],
-	rules = [],
-	ruleIdx = 0,
-	scope = 0,
 
 	isObject = function(obj) {
 		return Object.prototype.toString.call(obj) == '[object Object]';
@@ -30,6 +27,10 @@ var ast = [],
 
 	CssProperty = function(prop) {
 		this.init(prop);
+	},
+
+	CssExpression = function(expr) {
+		this.init(expr);
 	},
 
 	ScopeHandler = function() {
@@ -353,10 +354,9 @@ Selector.prototype = {
 
 	},
 
+	toCss: function() {
 
-	toString: function() {
-
-		var out = [], rs,
+		var out = [], rs, expr,
 			mainSelector = this.selectorSpec.name;
 
 		switch(this.selectorSpec.type) {
@@ -370,8 +370,8 @@ Selector.prototype = {
 				break;
 
 			case 'var_reference':
-				mainSelector = parser.yy.toStringExpr(this.selectorSpec);
-				//TODO...
+				expr = new CssExpression(this.selectorSpec);
+				mainSelector = expr.toCss();
 				break;
 		}
 
@@ -383,7 +383,7 @@ Selector.prototype = {
 
 			rs = new Selector(this.selectorSpec.relatedSelector);
 
-			out.push(rs.toString());
+			out.push(rs.toCss());
 		}
 
 		return out.join('');
@@ -398,121 +398,17 @@ CssProperty.prototype = {
 		this.val = prop.val;
 	},
 
-	toString: function() {
-		return this.name + ': ' + parser.yy.toStringExpr(this.val) + ';';
+	toCss: function() {
+		var expr = new CssExpression(this.val);
+		return this.name + ': ' + expr.toCss() + ';';
 	}
 
 };
 
-parser.yy = {
-/*
-	assign: function(name, val) {
-		assignments[name] = this.resolveVars(val);
-		if(assignments[name].type == 'string') {
-			assignments[name].addQuotes = false;
-		}
-	},
+CssExpression.prototype = {
 
-	resolveVars: function(expr) {
-
-		switch(expr.type) {
-
-			case 'term_sequence':
-			case 'term_list':
-				expr.val.forEach(function(e) {
-					if(e.type == 'var_reference')
- 						e = this.evalVar(e.val);
-				}, this);
-				break;
-
-			case 'function':
-/ *
-				v = this.evalFnCall(expr);
-				if(v instanceof Color)
-					out.push(v.toCss());
-				else
-					out.push(v);
-* /
-				break;
-
-			case 'math_expr':
-				if(	expr.operand1.type == 'var_reference')
-					expr.operand1 = this.evalVar(expr.operand1.val);
-				if(	expr.operand2.type == 'var_reference')
-					expr.operand2 = this.evalVar(expr.operand2.val);
-				break;
-
-			case 'var_reference':
-				expr = this.evalVar(expr.val);
-				break;
-		}
-
-		return expr;
-	},
-
-	evalVar: function(varName) {
-
-		var ret = '';
-
-		if(assignments[varName]) {
-			ret = assignments[varName];
-		}
-		else {
-			console.log('Undefined variable ' + varName);
-		}
-
-		return ret;
-	},
-
-	addSelector: function(selector) {
-
-		if(!rules[ruleIdx]) {
-			rules[ruleIdx] = {
-				selectors: {}
-			};
-		}
-
-		var s = new Selector(selector);
-
-		rules[ruleIdx].selectors[s.toString()] = s;
-
-	},
-
-	addProperty: function(name, val) {
-
-console.log('#### ' + name);
-		if(!rules[ruleIdx].properties)
-			rules[ruleIdx].properties = {};
-
-		rules[ruleIdx].properties[name] = val;
-
-	},
-*/
-	newRule: function(selectorList, properties) {
-		ruleIdx++;
-
-		rulesStack.push({
-			selectorList: selectorList,
-			properties: properties
-		});
-	},
-
-	newScope: function(selectorList, properties) {
-		curScope++;
-
-		if(!rules[curScope]) {
-			rules[curScope] = {
-				scopeSelectors: selectorList
-			};
-		}
-
-		rules[curScope].rules = rulesStack;
-
-		curScope--;
-	},
-
-	getRules: function() {
-	  return rules;
+	init: function(expr) {
+		this.expr = expr;
 	},
 
 	calc: function(expr) {
@@ -937,8 +833,7 @@ console.log('NON COMPATIBILI!!!');
 	int2color: function(val) {
 		return '#' + Math.round(val).toString(16);
 	},
-
-
+/*
 	normalizeOperand: function(op) {
 
 		var num;
@@ -971,7 +866,7 @@ console.log('NON COMPATIBILI!!!');
 		return op;
 
 	},
-
+*/
 	checkOperands: function(op1, op2) {
 
 		var ok = false;
@@ -1007,17 +902,19 @@ console.log('NON COMPATIBILI!!!');
 
 	evalFnCall: function(fnExpr) {
 
-		var evalFn, paramList = [];
+		var evalFn, paramList = [], expr;
 
 		if(fnExpr.params) {
 			if(fnExpr.params.type == 'term_list') {
 				fnExpr.params.val.forEach(function(v) {
 // console.log(v);
-					paramList.push(this.toStringExpr(v));
+					expr = new CssExpression(v);
+					paramList.push(expr.toCss());
 				}, this);
 			}
 			else {
-				paramList.push(this.toStringExpr(fnExpr.params));
+				expr = new CssExpression(fnExpr.params);
+				paramList.push(expr.toCss());
 			}
 
 		}
@@ -1034,13 +931,111 @@ console.log('NON COMPATIBILI!!!');
 		return evalFn;
 	},
 
-	setAST: function(_ast) {
-		ast = _ast;
-console.log(util.inspect(ast, false, null));
+	evalString: function(strExpr) {
+		var out = [], expr,
+			addQuotes = strExpr.addQuotes !== undefined ? strExpr.addQuotes : true;
 
+		if(addQuotes)
+			out.push('\'');
+
+		if(Array.isArray(strExpr.val)) {
+			strExpr.val.forEach(function(e) {
+				expr = new CssExpression(e);
+				out.push(expr.toCss());
+			}, this);
+		}
+		else {
+			expr = new CssExpression(strExpr.val);
+			out.push(expr.toCss());
+		}
+
+		if(addQuotes)
+			out.push('\'');
+
+		return out.join('');
 	},
 
-	toString: function() {
+	toCss: function() {
+
+		var out = [], tmp = [], v, expr;
+
+		switch(this.expr.type) {
+
+			case 'term_sequence':
+				this.expr.val.forEach(function(e) {
+					expr = new CssExpression(e);
+					tmp.push(expr.toCss());
+					//tmp.push(this.toCssExpr(e));
+				}, this);
+				out.push(tmp.join(' '));
+				break;
+
+			case 'term_list':
+				this.expr.val.forEach(function(e) {
+					expr = new CssExpression(e);
+					tmp.push(expr.toCss());
+					// tmp.push(this.toCssExpr(e));
+				}, this);
+				out.push(tmp.join(', '));
+				break;
+
+			case 'function':
+				v = this.evalFnCall(this.expr);
+				if(v instanceof Color)
+					out.push(v.toCss());
+				else
+					out.push(v);
+				break;
+
+			case 'string':
+				out.push(this.evalString(this.expr));
+				break;
+
+			case 'string_part':
+				out.push(this.expr.val);
+				break;
+
+			case 'var_reference':
+				expr = new CssExpression(ScopeHandler.getVar(this.expr.val));
+				out.push(expr.toCss());
+				break;
+
+			case 'percentage': case 'dimension': case 'number':
+				out.push(this.expr.text);
+				break;
+
+			case 'color': case 'keyword':
+				out.push(this.expr.val);
+				break;
+
+			case 'math_expr':
+				v = this.calc(this.expr);
+
+				if(v instanceof Color) {
+					out.push(v.toCss());
+				}
+				else {
+					out.push(v.val + (v.um ? v.um : ''));
+				}
+				break;
+
+			default:
+				out.push(this.expr.val);
+		}
+
+		return out.join('');
+
+	}
+
+};
+
+parser.yy = {
+
+	setAST: function(_ast) {
+		ast = _ast;
+	},
+
+	toCss: function() {
 
 		var out = [];
 
@@ -1059,7 +1054,7 @@ console.log(util.inspect(ast, false, null));
 
 			}
 			else if(n.rule) {
-				out.push(this.toStringRule(n.rule));
+				out.push(this.toCssRule(n.rule));
 			}
 
 		}, this);
@@ -1069,7 +1064,7 @@ console.log(util.inspect(ast, false, null));
 		return out.join('');
 	},
 
-	toStringRule: function(rule, parentSelectors) {
+	toCssRule: function(rule, parentSelectors) {
 
 		var	out = [], props = [], rules = [],
 			selectors = [],
@@ -1112,7 +1107,7 @@ console.log(util.inspect(ast, false, null));
 
 			switch(rc.type) {
 				case 'rule':
-					rules.push(this.toStringRule(rc, rule.selectors));
+					rules.push(this.toCssRule(rc, rule.selectors));
 					break;
 
 				case 'vardecl':
@@ -1121,7 +1116,7 @@ console.log(util.inspect(ast, false, null));
 
 				case 'property':
 					var p = new CssProperty(rc);
-					props.push("\t" + p.toString() + "\n");
+					props.push("\t" + p.toCss() + "\n");
 					break;
 			}
 
@@ -1131,7 +1126,7 @@ console.log(util.inspect(ast, false, null));
 
 			rule.selectors.forEach(function(selector) {
 				var s = new Selector(selector);
-				selectors.push(s.toString());
+				selectors.push(s.toCss());
 			});
 
 			out.push(selectors.join(", \n"));
@@ -1150,99 +1145,6 @@ console.log(util.inspect(ast, false, null));
 		ScopeHandler.popScope();
 
 		return out.join('');
-	},
-
-	toStringExpr: function(expr, evalVar) {
-
-		var out = [], tmp = [], v;
-
-		evalVar = evalVar === undefined ? false : evalVar;
-
-		switch(expr.type) {
-
-			case 'term_sequence':
-				expr.val.forEach(function(e) {
-					tmp.push(this.toStringExpr(e));
-				}, this);
-				out.push(tmp.join(' '));
-				break;
-
-			case 'term_list':
-				expr.val.forEach(function(e) {
-					tmp.push(this.toStringExpr(e));
-				}, this);
-				out.push(tmp.join(', '));
-				break;
-
-			case 'function':
-				v = this.evalFnCall(expr);
-				if(v instanceof Color)
-					out.push(v.toCss());
-				else
-					out.push(v);
-				break;
-
-			case 'string':
-				out.push(this.evalString(expr, !evalVar));
-				break;
-
-			case 'string_part':
-				out.push(expr.val);
-				break;
-
-			case 'var_reference':
-				out.push(this.toStringExpr(ScopeHandler.getVar(expr.val)));
-				break;
-
-			case 'percentage': case 'dimension': case 'number':
-				out.push(expr.text);
-				break;
-
-			case 'color': case 'keyword':
-				out.push(expr.val);
-				break;
-
-			case 'math_expr':
-// console.log(expr);
-				v = this.calc(expr);
-// console.log(v);
-				if(v instanceof Color) {
-					out.push(v.toCss());
-				}
-				else {
-					out.push(v.val + (v.um ? v.um : ''));
-					// out.push(this.toStringExpr(v));
-				}
-				break;
-
-			default:
-				out.push(expr.val);
-		}
-
-		return out.join('');
-
-	},
-
-	evalString: function(expr) {
-		var out = [],
-			addQuotes = expr.addQuotes !== undefined ? expr.addQuotes : true;
-
-		if(addQuotes)
-			out.push('\'');
-
-		if(Array.isArray(expr.val)) {
-			expr.val.forEach(function(e) {
-				out.push(this.toStringExpr(e));
-			}, this);
-		}
-		else {
-			out.push(this.toStringExpr(expr.val));
-		}
-
-		if(addQuotes)
-			out.push('\'');
-
-		return out.join('');
 	}
 
 };
@@ -1256,4 +1158,4 @@ var source = require('fs').readFileSync(require('path').normalize(process.argv[2
 
 parser.parse(source);
 
-console.log(parser.yy.toString());
+console.log(parser.yy.toCss());

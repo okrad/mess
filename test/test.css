@@ -88,12 +88,16 @@ $ns {
 */
 
 $col: #eee;
+$ns: '.teranet';
 
-a {
+$ns a {
 
 	font-size: 11px;
+	border: 1px solid #ccc;
 
-	b {
+//	$ns: '.ciccio';
+
+	& b {
 		$col: #ccc;
 		color: $col;
 
@@ -103,6 +107,6 @@ a {
 	}
 
 	c {
-		color: $col + 30%;
+		color: $col + 5%;
 	}
 }

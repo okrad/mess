@@ -78,71 +78,6 @@ property: PROPNAME expr SEMICOLON {
 	}
 	;
 
-
-/*
-rule: selectorlist LBRACE vardecl* property* rule* RBRACE {
-
-		$$ = {
-			type: 'rule',
-			selectors: $1,
-			vars: $3,
-			properties: $4,
-			rules: $5
-		};
-	};
-*/
-
-/*
-stylesheet: style stylesheet {
-
-		var styleList = [$1];
-
-		if($2)
-			styleList = styleList.concat($2);
-
-		$$ = styleList;
-
-		yy.setAST($$);
-
-	}
-	| EOF
-	;
-
-style: S* rule {
-
-		$$ = {
-			type: 'style',
-			vars: $2,
-			rule: $3
-		};
-	};
-
-style: S* vardecl* rule {
-
-		$$ = {
-			type: 'style',
-			vars: $2,
-			rule: $3
-		};
-	};
-
-rule: selectorlist LBRACE properties RBRACE {
-		$$ = {
-			type: 'simple_rule',
-			selectors: $1,
-			properties: $3
-		};
-	}
-	| selectorlist LBRACE style RBRACE {
-		$$ = {
-			type: 'scope_rule',
-			selectors: $1,
-			innerStyles: $3
-		};
-	}
-	;
-*/
-
 selectorlist: selector {
 		$$ = [$1];
 	}
@@ -174,6 +109,7 @@ selector: class combinator? S* selector? {
 		$$.combinator = $2 !== undefined ? $2 : $3.length > 0 ? 'descendant' : 'specificity';
 		$$.relatedSelector = $4;
 	}
+	| parentRef combinator? selector
 	;
 
 class: DOT ident pseudo? {
@@ -210,6 +146,8 @@ selvar: DOLLARKEYWORD pseudo? {
 			pseudo: $2
 		};
 	};
+
+parentRef: AMPERSAND;
 
 pseudo: PSEUDO_BEFORE {
 		$$ = $1;
