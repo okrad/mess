@@ -29,30 +29,59 @@ stylesheet: S* vardecl* rule stylesheet {
 		}
 
 		yy.setAST(styles);
-/*
-		$$ = {
-			type: 'stylesheet',
-			vars: $2,
 
-		};
-
-		if($4) {
-		}
-
-		var styleList = [$1];
-
-		if($2)
-			styleList = styleList.concat($2);
-
-		$$ = styleList;
-
-		yy.setAST($$);
-*/
 	}
 	| EOF
 	;
 
+rule: selectorlist LBRACE rulecontent+ RBRACE {
+
+		if(!Array.isArray($3))
+			$3 = [$3];
+
+		$$ = {
+			type: 'rule',
+			selectors: $1,
+			content: $3
+		};
+	};
+
+rulecontent: vardecl
+	| property
+	| rule
+	;
+
+vardecl: ASSIGNMENT S* expr SEMICOLON {
+
+		var varName = $1.substr(1),
+			colonPos = varName.indexOf(':');
+
+		if(colonPos != -1) {
+			varName = varName.substr(0, colonPos);
+			varName = varName.replace(/\s/, '');
+		}
+
+		$$ = {
+			type: 'vardecl',
+			name: varName,
+			val: $3
+		};
+
+	};
+
+property: PROPNAME expr SEMICOLON {
+		$$ = {
+			type: 'property',
+			name: $1.substr(0, $1.indexOf(' ') - 1),
+			val: $2
+		}
+	}
+	;
+
+
+/*
 rule: selectorlist LBRACE vardecl* property* rule* RBRACE {
+
 		$$ = {
 			type: 'rule',
 			selectors: $1,
@@ -61,6 +90,7 @@ rule: selectorlist LBRACE vardecl* property* rule* RBRACE {
 			rules: $5
 		};
 	};
+*/
 
 /*
 stylesheet: style stylesheet {
@@ -196,7 +226,7 @@ combinator: GREATER {
 		$$ = 'next_sibling';
 	}
 	;
-
+/*
 properties: property {
 		$$ = [$1];
 	}
@@ -206,16 +236,7 @@ properties: property {
 			$$ = $$.concat($3);
 	}
 	;
-
-property: PROPNAME expr SEMICOLON {
-		$$ = {
-			type: 'property',
-			name: $1.substr(0, $1.indexOf(' ') - 1),
-			val: $2
-		}
-		//yy.addProperty($1.substr(0, $1.indexOf(' ') - 1), $2);
-	}
-	;
+*/
 
 expr: term
 	| term S+ expr {
@@ -419,21 +440,6 @@ function: FUNCTION expr? RPAR {
 	}
 	;
 
-vardecl: ASSIGNMENT S* expr SEMICOLON {
-
-		var varName = $1.substr(1),
-			colonPos = varName.indexOf(':');
-
-		if(colonPos != -1) {
-			varName = varName.substr(0, colonPos);
-			varName = varName.replace(/\s/, '');
-		}
-
-		$$ = {
-			name: varName,
-			val: $3
-		};
-	};
 /*
 vardecl: DOLLARKEYWORD COLON expr SEMICOLON {
 		$$ = {

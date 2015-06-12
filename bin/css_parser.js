@@ -1,8 +1,7 @@
 var util = require('util');
 var parser = require("./mess").parser;
 
-var //assignments = {},
-	ast = [],
+var ast = [],
 	rules = [],
 	ruleIdx = 0,
 	scope = 0,
@@ -1037,6 +1036,7 @@ console.log('NON COMPATIBILI!!!');
 
 	setAST: function(_ast) {
 		ast = _ast;
+console.log(util.inspect(ast, false, null));
 
 	},
 
@@ -1070,16 +1070,8 @@ console.log('NON COMPATIBILI!!!');
 	},
 
 	toStringRule: function(rule, parentSelectors) {
-/*
-		$$ = {
-			type: 'rule',
-			selectors: $1,
-			vars: $3,
-			properties: $4,
-			rules: $5
-		};
-*/
-		var	out = [],
+
+		var	out = [], props = [], rules = [],
 			selectors = [],
 			newSelectors = [],
 			mergeSelectors = function(sel1, sel2) {
@@ -1095,15 +1087,6 @@ console.log('NON COMPATIBILI!!!');
 			};
 
 		ScopeHandler.pushScope();
-
-		if(rule.vars) {
-			if(!Array.isArray(rule.vars))
-				rule.vars = [rule.vars];
-
-			rule.vars.forEach(function(varDef) {
-				ScopeHandler.addVar(varDef.name, varDef.val);
-			}, this);
-		}
 
 		if(!Array.isArray(rule.selectors))
 			rule.selectors = [rule.selectors];
@@ -1125,12 +1108,28 @@ console.log('NON COMPATIBILI!!!');
 
 		}
 
-		if(rule.properties && rule.properties.length > 0) {
+		rule.content.forEach(function(rc) {
+
+			switch(rc.type) {
+				case 'rule':
+					rules.push(this.toStringRule(rc, rule.selectors));
+					break;
+
+				case 'vardecl':
+					ScopeHandler.addVar(rc.name, rc.val);
+					break;
+
+				case 'property':
+					var p = new CssProperty(rc);
+					props.push("\t" + p.toString() + "\n");
+					break;
+			}
+
+		}, this);
+
+		if(props.length > 0 || rules.length > 0) {
 
 			rule.selectors.forEach(function(selector) {
-
-// console.log(util.inspect(selector, false, null));
-
 				var s = new Selector(selector);
 				selectors.push(s.toString());
 			});
@@ -1139,19 +1138,13 @@ console.log('NON COMPATIBILI!!!');
 
 			out.push(" {\n");
 
-			rule.properties.forEach(function(prop) {
-				var p = new CssProperty(prop);
-				out.push("\t" + p.toString() + "\n");
-			});
+			if(props.length > 0)
+				out.push(props.join("\n"));
 
 			out.push("\n}\n");
-		}
 
-		if(rule.rules) {
-			//La regola ha a sua volta regole innestate
-			rule.rules.forEach(function(r) {
-				out.push(this.toStringRule(r, rule.selectors));
-			}, this);
+			if(rules.length > 0)
+				out.push(rules.join("\n"));
 		}
 
 		ScopeHandler.popScope();

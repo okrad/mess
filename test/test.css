@@ -96,6 +96,10 @@ a {
 	b {
 		$col: #ccc;
 		color: $col;
+
+		b2 {
+			font-size: 12px;
+		}
 	}
 
 	c {
